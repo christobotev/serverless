@@ -1,0 +1,20 @@
+{
+  "Records": [
+    {
+      "messageId": "19dd0b57-b21e-4ac1-bd88-01bbb068cb78",
+      "receiptHandle": "MessageReceiptHandle",
+      "body": "{\n  \"transactions\": [\n    {\n      \"customer\": {\n        \"name\": \"ZOLLNER ELEKTRONIK AG\",\n        \"number\": \"91609\"\n      },\n      \"order\": {\n        \"orderNumber\": 3007731,\n        \"transactionDate\": \"10/3/17\",\n        \"transactionQuantity\": 500,\n        \"unitPrice\": 6.0375,\n        \"unitCost\": 5.45,\n        \"additionalCost\": 0.0,\n        \"lineNumber\": 1,\n        \"customerPurchaseOrder\": \"4502502063-678-001\",\n        \"warehouseCode\": \"H2\",\n        \"salesman\": \"804\",\n        \"lotNumber\": 3008586,\n        \"shipmentNumber\": 4009118,\n        \"shipmentVia\": 102,\n        \"shipmentTrackingNumber\": \"1ZAX58720493381281\",\n        \"shipmentMethod\": \"UPS EXP SAVER\",\n        \"invoiceNumber\": 5008391,\n        \"country\": \"DE\",\n        \"ipn\": {\n          \"ipn\": \"1802528-00\"\n        }\n      },\n      \"item\": {\n        \"description\": \"10MHz - 6000MHz RF TRANSFORMER\",\n        \"mpn\": {\n          \"mpn\": \"TCM1-63AX+\",\n          \"manufacturerName\": \"MIN\"\n        }\n      }\n    }\n  ]\n}",
+      "attributes": {
+        "ApproximateReceiveCount": "1",
+        "SentTimestamp": "1523232000000",
+        "SenderId": "AROARRUIXCY4WBFJTLQP7:python-functions-dev-document-producer-small",
+        "ApproximateFirstReceiveTimestamp": "1523232000001"
+      },
+      "messageAttributes": {},
+      "md5OfBody": "7b270e59b47ff90a553787216d55d91d",
+      "eventSource": "aws:sqs",
+      "eventSourceARN": "arn:aws:sqs:us-west-2:123456789012:order_history",
+      "awsRegion": "us-west-2"
+    }
+  ]
+}

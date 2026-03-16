@@ -1,0 +1,17 @@
+# deploying layers with the functions would result it deploying new version of the layer each time the functions are deployed
+# to avoid this it's suggested to keep the layers as separate config https://serverless.com/blog/publish-aws-lambda-layers-serverless-framework/
+
+service: requests
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: ${opt:stage, 'dev'}
+  region: ${env:AWS_REGION}
+  deploymentBucket: ${env:AWS_S3_BUCKET}
+
+layers:
+  requests:
+    package:
+      artifact: requests.zip
+    compatibleRuntimes:
+      - python3.6

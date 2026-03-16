@@ -1,0 +1,145 @@
+service: python-functions
+
+provider:
+  name: aws
+  runtime: python3.6
+  stage: ${env:STAGE}
+  region: ${env:AWS_REGION}
+  deploymentBucket: ${env:AWS_S3_BUCKET}
+  role: ${env:AWS_LAMBDA_ROLE_RESOURCE}
+
+plugins:
+  - serverless-python-requirements
+  - serverless-plugin-existing-s3
+
+package:
+  individually: true
+  exclude:
+    - ./**
+
+custom:
+  pythonRequirements:
+    usePipenv: false
+    dockerizePip: false
+
+functions:
+  document-producer-small:
+    memorySize: 128
+    timeout: 50
+    description: Function that reads a .csv file breaks it into messages and pushes it to SQS.
+    handler: lambda_function.lambda_handler
+    module: function/documentProducer
+    package:
+      include:
+        - function/documentProducer/**
+      exclude:
+        - function/documentProducer/Pipfile
+        - function/documentProducer/Pipfile.lock
+        - function/documentProducer/requirements.lock
+    environment:
+      # These two are different in dev - we need them this way
+      SQS_QUEUE_URL: ${env:SQS_ENDPOINT}
+      SQS_ENDPOINT: ${env:SQS_ENDPOINT}
+      STAGE: ${env:STAGE}
+    events:
+      - existingS3:
+          bucket: ${env:AWS_S3_BUCKET}
+          events:
+            - s3:ObjectCreated:*
+          rules:
+            - prefix: order_history/
+            - suffix: .csv
+      - existingS3:
+          bucket: ${env:AWS_S3_BUCKET}
+          events:
+            - s3:ObjectCreated:*
+          rules:
+            - prefix: rfq_history/
+            - suffix: .csv
+    layers:
+      - ${env:AWS_AIOBOTOCORE_LAYER_RESOURCE}
+
+  document-producer-large:
+    memorySize: 640
+    timeout: 65
+    description: Function that reads a .csv file breaks it into messages and pushes it to SQS. Uses more memory and higher timeout than the -small producer
+    handler: lambda_function.lambda_handler
+    module: function/documentProducer
+    package:
+      include:
+        - function/documentProducer/**
+      exclude:
+        - function/documentProducer/Pipfile
+        - function/documentProducer/Pipfile.lock
+        - function/documentProducer/requirements.lock
+    environment:
+      # These two are different in dev - we need them this way
+      SQS_QUEUE_URL: ${env:SQS_ENDPOINT}
+      SQS_ENDPOINT: ${env:SQS_ENDPOINT}
+      STAGE: ${env:STAGE}
+    events:
+      - existingS3:
+          bucket: ${env:AWS_S3_BUCKET}
+          events:
+            - s3:ObjectCreated:*
+          rules:
+            - prefix: erp_offer/
+            - suffix: .csv
+    layers:
+      - ${env:AWS_AIOBOTOCORE_LAYER_RESOURCE}
+
+  document-consumer:
+    memorySize: 128
+    timeout: 120
+    description: Function that is triggered by SQS, ingests a message and sends it to Bridge
+    handler: lambda_function.lambda_handler
+    module: function/documentConsumer
+    package:
+      include:
+        - function/documentConsumer/**
+      exclude:
+        - function/documentConsumer/Pipfile
+        - function/documentConsumer/Pipfile.lock
+        - function/documentConsumer/requirements.lock
+    # Higher than that could result in peaking server resource usage and requests start failing
+    reservedConcurrency: 2
+    environment:
+      BRIDGE_API: ${env:BRIDGE_API}
+      BRIDGE_USERNAME: ${env:BRIDGE_USERNAME}
+      BRIDGE_PASSWORD: ${env:BRIDGE_PASSWORD}
+    events:
+      - sqs:
+          arn: ${env:SQS_QUEUE_ORDER_HISTORY_ARN}
+          batchSize: 1
+      - sqs:
+          arn: ${env:SQS_QUEUE_RFQ_HISTORY_ARN}
+          batchSize: 1
+    layers:
+      - ${env:AWS_REQUESTS_LAYER_RESOURCE}
+
+  parseSpreadsheet:
+    memorySize: 128
+    timeout: 20
+    runtime: python3.6
+    module: function/parseSpreadsheet
+    handler: lambda_function.lambda_handler
+    description: When a .xlsx file is uploded, parse it and save it in DynamoDB
+    package:
+      include:
+        - function/parseSpreadsheet/**
+      exclude:
+        - function/parseSpreadsheet/Pipfile
+        - function/parseSpreadsheet/Pipfile.lock
+    environment:
+      SPREADSHEETS_ROWS_TABLE: ${env:SPREADSHEETS_ROWS_TABLE}
+      STAGE: ${env:STAGE}
+    events:
+      - existingS3:
+          bucket: ${env:AWS_S3_BUCKET}
+          events:
+            - s3:ObjectCreated:*
+          rules:
+            - prefix: spreadsheets/
+            - suffix: .xlsx
+    layers:
+      - ${env:AWS_XLRD_LAYER_RESOURCE}

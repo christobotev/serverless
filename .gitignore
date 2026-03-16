@@ -1,0 +1,10 @@
+.env
+*node_modules/
+.serverless/
+.webpack/
+.DS_Store
+.idea/
+*__pycache__/
+.python_plugin_cache/
+*.pytest_cache/
+var/
